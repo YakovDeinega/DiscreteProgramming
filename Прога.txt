@@ -1,0 +1,661 @@
+import java.util.Scanner
+import java.io.File
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
+import kotlin.math.*
+fun NOD (arg1:Int, arg2:Int): Int
+{
+    var x= abs(arg1)
+    var y= abs(arg2)
+    while(x!=y)
+    {
+        if(x>y)
+            x-=y
+        else
+            y-=x
+        if(x<=1)
+            return 1
+    }
+    return x
+}
+fun sum_drob (arg1: MutableList<Int>, arg2: MutableList<Int>): MutableList<Int>
+{
+    var x = mutableListOf(0,0)
+    x[0] = arg1[0]
+    x[1]=arg1[1]
+    var y = mutableListOf(0,0)
+    y[0] = arg2[0]
+    y[1]=arg2[1]
+    var NOK_temp: Int
+    var NOD_temp: Int
+    NOK_temp=(x[1]*y[1])/NOD(x[1],y[1])
+    y[0]=x[0]*(NOK_temp/x[1])+y[0]*(NOK_temp/y[1])
+    y[1]=NOK_temp
+    NOD_temp=NOD(y[0],y[1])
+    y[0]/=NOD_temp
+    y[1]/=NOD_temp
+    if(y[0]==0)
+    {
+        y[1]=1
+    }
+    return y
+}
+fun console_text(message: String)
+{
+    print(message)
+    Files.write(Paths.get("data/name2.txt"),message.toByteArray(),StandardOpenOption.APPEND)
+}
+fun main(){
+    var scan = Scanner(System.`in`)
+    println("Введите количество переменных: ")
+    var m=scan.nextInt()
+    println("Введите количество строк (количество ограничений): ")
+    var n=scan.nextInt()
+    var A = MutableList(n){MutableList(m){MutableList(2){1}} }
+    var B = MutableList(n){MutableList(2){1} }
+    var C = MutableList(m){0}
+    println("Как хотите ввести данные? Считать с файла - 1, с клавиатуры - 2")
+    var choice=scan.nextInt()
+    if(choice==1)
+    {
+        var matrix = mutableListOf<MutableList<Int>>()
+        var matrix2 = mutableListOf<MutableList<Int>>()
+        var matrix3 = mutableListOf<MutableList<Int>>()
+        var count: Int = 0
+        for(i in File("data/name.txt").readLines())
+        {
+            if (count<n)
+                matrix.add(i.split(" ").map{i->i.toInt()} as MutableList<Int>)
+            else if(count==n)
+                matrix2.add(i.split(" ").map{i->i.toInt()} as MutableList<Int>)
+            else
+                matrix3.add(i.split(" ").map{i->i.toInt()} as MutableList<Int>)
+            count++
+        }
+        for(i in 0..n-1)
+            for(j in 0..m-1)
+                A[i][j][0]=matrix[i][j]
+        for(i in 0..n-1)
+            B[i][0]=matrix3[i][0]
+        for(i in 0..m-1)
+            C[i]=matrix2[0][i]
+    }
+    else if(choice==2)
+    {
+        println("Заполните коэффициенты при переменных в матрице A: ")
+        for(i in 0..n-1)
+            for(j in 0..m-1)
+                A[i][j][0]=scan.nextInt()
+        println("Введите ограничения bi: ")
+        for(i in 0..n-1)
+            B[i][0]=scan.nextInt()
+        println("Введите коэффициенты целевой функции: ")
+        for(i in 0..m-1)
+            C[i]=scan.nextInt()
+    }
+    else{
+        println("В следующий раз думайте головой!")
+        return
+    }
+    var djey = MutableList(m){mutableListOf(0,1)}
+    var djey_M= MutableList(m){mutableListOf(0,1)}
+    var string_help: String
+    val lengthOfString = 9
+    print("Условия задачи: \n")
+    File("data/name2.txt").writeText("Условия задачи: \n")
+    console_text("C: \n")
+    for(i in 0..m-1) {
+        console_text("${C[i]} ")
+    }
+    console_text("\n")
+    console_text("A:\n")
+    for(i in 0..n-1) {
+        for (j in 0..m - 1)
+            console_text("${A[i][j][0]} ")
+        console_text("\n")
+    }
+    console_text("B:\n")
+    for(i in 0..n-1)
+    {
+        console_text("${B[i][0]}\n")
+    }
+    for(i in 0..n-1)
+    {
+        if(B[i][0]<0) {
+            for (j in 0..m - 1) {
+                A[i][j][0] *= (-1)
+            }
+            B[i][0]*=(-1)
+        }
+    }
+    var flag: Boolean
+    var Bazis = MutableList(n){0}
+    for(i in 0..n-1)
+    {
+        for(j in 0..m-1)
+        {
+            flag=true
+            if(A[i][j][0]==1)
+            {
+                for(k in 0..n-1)
+                {
+                    if(k!=i && A[k][j][0]!=0)
+                    {
+                        flag=false
+                    }
+                }
+            }
+            if(flag && A[i][j][0]==1)
+                Bazis[i]=j+1
+        }
+    }
+    var index_Temp = 0
+    for(i in 0..n-1)
+    {
+        if(Bazis[i]==0) {
+            Bazis[i] = m+1+index_Temp
+            index_Temp++
+        }
+    }
+    console_text("Базис: \n")
+    for(i in 0..n-1)
+    {
+        console_text("A${Bazis[i]}\n")
+    }
+    console_text("Получена таблица: \n")
+    console_text("№".padEnd(lengthOfString)+"Б.".padEnd(lengthOfString)+"Сб.".padEnd(lengthOfString)+"B".padEnd(lengthOfString))
+    for(j in 0..(m-1)+index_Temp)
+        console_text("A${j+1}".padEnd(lengthOfString))
+    for(i in 0..n-1)
+    {
+        console_text("\n"+"${i+1}".padEnd(lengthOfString)+"A${Bazis[i]}".padEnd(lengthOfString))
+        if(Bazis[i]>m)
+        {
+            console_text("-M".padEnd(lengthOfString))
+        }
+        else{
+            console_text("${C[Bazis[i]-1]}".padEnd(lengthOfString))
+        }
+        console_text("${B[i][0]}".padEnd(lengthOfString))
+        for(j in 0..m-1)
+        {
+            console_text("${A[i][j][0]}".padEnd(lengthOfString))
+        }
+        for(k in m..(m+index_Temp-1))
+            if((Bazis[i]-1)==k)
+                console_text("1".padEnd(lengthOfString))
+            else
+                console_text("0".padEnd(lengthOfString))
+        console_text("\n")
+    }
+    console_text("\n"+"${n+1}".padEnd(2*lengthOfString)+"\u0394j".padEnd(lengthOfString))
+    var sum = 0
+    for(i in 0..n-1)
+    {
+        if(Bazis[i]<=m)
+            sum+=C[Bazis[i]-1]*B[i][0]
+    }
+    console_text("$sum".padEnd(lengthOfString))
+    for(j in 0..m-1)
+    {
+        for(i in 0..n-1)
+        {
+            if(Bazis[i]<=m)
+            {
+                djey[j][0]+=C[Bazis[i]-1]*A[i][j][0]
+            }
+        }
+        djey[j][0]-=C[j]
+        console_text("${djey[j][0]}".padEnd(lengthOfString))
+    }
+    for(k in m..(m+index_Temp-1))
+        console_text("0".padEnd(lengthOfString))
+    console_text("\n")
+    console_text("\n"+"${n+2}".padEnd(2*lengthOfString)+"\u0394jM".padEnd(lengthOfString))
+    sum=0
+    for(i in 0..n-1)
+    {
+        if(Bazis[i]>m)
+        {
+            sum+=(-1)*B[i][0]
+        }
+    }
+    console_text("$sum".padEnd(lengthOfString))
+    for(j in 0..m-1)
+    {
+        for(i in 0..n-1)
+        {
+            if(Bazis[i]>m)
+                djey_M[j][0]+=(-1)*A[i][j][0]
+        }
+        console_text("${djey_M[j][0]}".padEnd(lengthOfString))
+    }
+    for(k in m..(m+index_Temp-1))
+        console_text("0".padEnd(lengthOfString))
+    console_text("\nСначала избавляемся от искусственного базиса: \n")
+    var max_abs: Double
+    var max_ind: Int
+    var min: Double
+    var min_ind: Int
+    var temp = mutableListOf(0,0)
+    for(l in 0..index_Temp-1)
+    {
+        max_abs=0.0
+        max_ind=-1
+        min_ind=-1
+        min=0.0
+        for(j in 0..m-1)
+        {
+            if(max_abs>(djey_M[j][0].toDouble()/djey_M[j][1]))
+            {
+                max_abs=(djey_M[j][0].toDouble()/djey_M[j][1])
+                max_ind=j
+            }
+        }
+        if(max_abs==0.0)
+        {
+            console_text("\nВаша задача не решается методом искусственного базиса\n")
+            return
+        }
+        for(help in 0..n-1)
+        {
+            if(A[help][max_ind][0]>0) {
+                min = ((B[help][0].toDouble() / B[help][1]) / (A[help][max_ind][0].toDouble() / A[help][max_ind][1]))
+                min_ind=help
+                break
+            }
+        }
+        for(i in 0..n-1)
+        {
+                if (A[i][max_ind][0]>0 && min > ((B[i][0].toDouble() / B[i][1]) / (A[i][max_ind][0].toDouble() / A[i][max_ind][1]))) {
+                    min = ((B[i][0].toDouble() / B[i][1]) / (A[i][max_ind][0].toDouble() / A[i][max_ind][1]))
+                    min_ind = i
+                }
+        }
+        if(min_ind == -1)
+        {
+            console_text("\nВаша задача не решается методом искусственного базиса\n")
+            println("Error2")
+            return
+        }
+        Bazis[min_ind]=max_ind+1
+        temp[0]=A[min_ind][max_ind][0]
+        temp[1]=A[min_ind][max_ind][1]
+        var NOD_temp: Int
+        for(j in 0..m-1)
+        {
+            A[min_ind][j][0]*=temp[1]
+            if(A[min_ind][j][0]==0)
+            {
+                A[min_ind][j][1]=1
+            }
+            else{
+                A[min_ind][j][1]*=temp[0]
+                NOD_temp=NOD(A[min_ind][j][0],A[min_ind][j][1])
+                A[min_ind][j][0]/=NOD_temp
+                A[min_ind][j][1]/=NOD_temp
+            }
+        }
+        B[min_ind][0]*=temp[1]
+        if(B[min_ind][0]==0)
+        {
+            B[min_ind][1]=1
+        }
+        else
+        {
+            B[min_ind][1]*=temp[0]
+            NOD_temp=NOD(B[min_ind][0],B[min_ind][1])
+            B[min_ind][0]/=NOD_temp
+            B[min_ind][1]/=NOD_temp
+        }
+        var help_Gauss = mutableListOf(0,0)
+        var temp_Gauss = mutableListOf(0,0)
+        for(i in 0..n-1)
+        {
+            if(i!=min_ind)
+            {
+                help_Gauss[0]=A[i][max_ind][0]
+                help_Gauss[1]=A[i][max_ind][1]
+                for(j in 0..m-1)
+                {
+                    temp_Gauss[0]=(-1)*help_Gauss[0]*A[min_ind][j][0]
+                    temp_Gauss[1]=help_Gauss[1]*A[min_ind][j][1]
+                    A[i][j]=sum_drob(temp_Gauss,A[i][j])
+                }
+                temp_Gauss[0]=(-1)*help_Gauss[0]*B[min_ind][0]
+                temp_Gauss[1]=help_Gauss[1]*B[min_ind][1]
+                B[i]=sum_drob(temp_Gauss,B[i])
+            }
+        }
+        console_text("\n\nЧерез ${l+1}-й шаг: \n")
+        console_text("№".padEnd(lengthOfString)+"Б.".padEnd(lengthOfString)+"Сб.".padEnd(lengthOfString)+"B".padEnd(lengthOfString))
+        for(j in 0..(m-1)+index_Temp)
+            console_text("A${j+1}".padEnd(lengthOfString))
+        for(i in 0..n-1)
+        {
+            console_text("\n"+"${i+1}".padEnd(lengthOfString)+"A${Bazis[i]}".padEnd(lengthOfString))
+            if(Bazis[i]>m)
+            {
+                console_text("-M".padEnd(lengthOfString))
+            }
+            else{
+                console_text("${C[Bazis[i]-1]}".padEnd(lengthOfString))
+            }
+            if(B[i][1]==1)
+            {
+                console_text("${B[i][0]}".padEnd(lengthOfString))
+            }
+            else
+            {
+                console_text("${B[i][0]}/${B[i][1]}".padEnd(lengthOfString))
+            }
+            for(j in 0..m-1)
+            {
+                if(A[i][j][1]==1)
+                {
+                    console_text("${A[i][j][0]}".padEnd(lengthOfString))
+                }
+                else
+                {
+                    console_text("${A[i][j][0]}/${A[i][j][1]}".padEnd(lengthOfString))
+                }
+            }
+            for(k in m..(m+index_Temp-1))
+                if((Bazis[i]-1)==k)
+                    console_text("1".padEnd(lengthOfString))
+                else
+                    console_text("0".padEnd(lengthOfString))
+            console_text("\n")
+        }
+        console_text("\n"+"${n+1}".padEnd(2*lengthOfString)+"\u0394j".padEnd(lengthOfString))
+        var temp_B = mutableListOf(0,0)
+        var sum = mutableListOf(0,1)
+        sum[0]=0
+        sum[1]=1
+        for(i in 0..n-1) {
+            if (Bazis[i] <= m) {
+                temp_B[0]=C[Bazis[i]-1]*B[i][0]
+                temp_B[1]=B[i][1]
+                sum=sum_drob(temp_B,sum)
+            }
+        }
+        if(sum[1]==1)
+        {
+            console_text("${sum[0]}".padEnd(lengthOfString))
+        }
+        else
+        {
+            console_text("${sum[0]}/${sum[1]}".padEnd(lengthOfString))
+        }
+        for(j in 0..m-1)
+        {
+            djey[j][0]=0
+            djey[j][1]=1
+            for(i in 0..n-1)
+            {
+                if(Bazis[i]<=m)
+                {
+                    temp_B[0]=C[Bazis[i]-1]*A[i][j][0]
+                    temp_B[1]=A[i][j][1]
+                    djey[j]=sum_drob(temp_B,djey[j])
+                }
+            }
+            djey[j][0]-=(C[j] * djey[j][1])
+            if(djey[j][1]==1)
+            {
+                console_text("${djey[j][0]}".padEnd(lengthOfString))
+            }
+            else
+            {
+                console_text("${djey[j][0]}/${djey[j][1]}".padEnd(lengthOfString))
+            }
+        }
+        for(k in m..(m+index_Temp-1))
+            console_text("0".padEnd(lengthOfString))
+        console_text("\n")
+        console_text("\n"+"${n+2}".padEnd(2*lengthOfString)+"\u0394jM".padEnd(lengthOfString))
+        sum[0]=0
+        sum[1]=1
+        for(i in 0..n-1)
+        {
+            if(Bazis[i]>m)
+            {
+                temp_B[0]=(-1)*B[i][0]
+                temp_B[1]=B[i][1]
+                sum=sum_drob(temp_B,sum)
+            }
+        }
+        if(sum[1]==1)
+        {
+            console_text("${sum[0]}".padEnd(lengthOfString))
+        }
+        else
+        {
+            console_text("${sum[0]}/${sum[1]}".padEnd(lengthOfString))
+        }
+        for(j in 0..m-1)
+        {
+            djey_M[j][0]=0
+            djey_M[j][1]=1
+            for(i in 0..n-1)
+            {
+                if(Bazis[i]>m) {
+                    temp_B[0]=(-1)*A[i][j][0]
+                    temp_B[1]=A[i][j][1]
+                    djey_M[j]=sum_drob(temp_B,djey_M[j])
+                }
+            }
+            if(djey_M[j][1]==1)
+            {
+                console_text("${djey_M[j][0]}".padEnd(lengthOfString))
+            }
+            else
+            {
+                console_text("${djey_M[j][0]}/${djey_M[j][1]}".padEnd(lengthOfString))
+            }
+        }
+        for(k in m..(m+index_Temp-1))
+            console_text("0".padEnd(lengthOfString))
+    }
+    console_text("\nТеперь делаем самый обычный симплекс метод:\t")
+    flag=false
+    for(i in 0..(djey.size-1))
+    {
+        if (djey[i][0]<0)
+        {
+            flag=true
+            break
+        }
+    }
+    if (!flag)
+    {
+        console_text("Все получилось сразу\nFmax=")
+        var temp_B = mutableListOf(0,0)
+        var sum = mutableListOf(0,1)
+        sum[0]=0
+        sum[1]=1
+        for(i in 0..n-1) {
+            if (Bazis[i] <= m) {
+                temp_B[0]=C[Bazis[i]-1]*B[i][0]
+                temp_B[1]=B[i][1]
+                sum=sum_drob(temp_B,sum)
+            }
+        }
+        if(sum[1]==1)
+        {
+            console_text("${sum[0]}".padEnd(lengthOfString))
+        }
+        else
+        {
+            console_text("${sum[0]}/${sum[1]}".padEnd(lengthOfString))
+        }
+        return
+    }
+    var count = 0
+    while(flag)
+    {
+        max_abs=0.0
+        max_ind=-1
+        min_ind=-1
+        min=0.0
+        for(j in 0..m-1)
+        {
+            if(max_abs>((djey[j][0].toDouble()/djey[j][1])))
+            {
+                max_abs=((djey[j][0].toDouble()/djey[j][1]))
+                max_ind=j
+            }
+        }
+        if(max_abs==0.0)
+        {
+            return
+        }
+        for(help in 0..n-1)
+        {
+            if(A[help][max_ind][0]>0) {
+                min = ((B[help][0].toDouble() / B[help][1]) / (A[help][max_ind][0].toDouble() / A[help][max_ind][1]))
+                min_ind=help
+                break
+            }
+        }
+        for(i in 0..n-1)
+        {
+            if (A[i][max_ind][0]>0 && min > ((B[i][0].toDouble() / B[i][1]) / (A[i][max_ind][0].toDouble() / A[i][max_ind][1]))) {
+                min = ((B[i][0].toDouble() / B[i][1]) / (A[i][max_ind][0].toDouble() / A[i][max_ind][1]))
+                min_ind = i
+            }
+        }
+        if(min_ind == -1)
+        {
+            console_text("Ваша задача не решается методом искусственного базиса\n")
+            return
+        }
+        Bazis[min_ind]=max_ind+1
+        temp[0]=A[min_ind][max_ind][0]
+        temp[1]=A[min_ind][max_ind][1]
+        var NOD_temp: Int
+        for(j in 0..m-1)
+        {
+            A[min_ind][j][0]*=temp[1]
+            if(A[min_ind][j][0]==0)
+            {
+                A[min_ind][j][1]=1
+            }
+            else{
+                A[min_ind][j][1]*=temp[0]
+                NOD_temp=NOD(A[min_ind][j][0],A[min_ind][j][1])
+                A[min_ind][j][0]/=NOD_temp
+                A[min_ind][j][1]/=NOD_temp
+            }
+        }
+        B[min_ind][0]*=temp[1]
+        if(B[min_ind][0]==0)
+        {
+            B[min_ind][1]=1
+        }
+        else
+        {
+            B[min_ind][1]*=temp[0]
+            NOD_temp=NOD(B[min_ind][0],B[min_ind][1])
+            B[min_ind][0]/=NOD_temp
+            B[min_ind][1]/=NOD_temp
+        }
+        var help_Gauss = mutableListOf(0,0)
+        var temp_Gauss = mutableListOf(0,0)
+        for(i in 0..n-1)
+        {
+            if(i!=min_ind)
+            {
+                help_Gauss[0]=A[i][max_ind][0]
+                help_Gauss[1]=A[i][max_ind][1]
+                for(j in 0..m-1)
+                {
+                    temp_Gauss[0]=(-1)*help_Gauss[0]*A[min_ind][j][0]
+                    temp_Gauss[1]=help_Gauss[1]*A[min_ind][j][1]
+                    A[i][j]=sum_drob(temp_Gauss,A[i][j])
+                }
+                temp_Gauss[0]=(-1)*help_Gauss[0]*B[min_ind][0]
+                temp_Gauss[1]=help_Gauss[1]*B[min_ind][1]
+                B[i]=sum_drob(temp_Gauss,B[i])
+            }
+        }
+        console_text("\nЧерез ${count+index_Temp+1}-й шаг: \n")
+        console_text("№".padEnd(lengthOfString)+"Б.".padEnd(lengthOfString)+"Сб.".padEnd(lengthOfString)+"B".padEnd(lengthOfString))
+        for(j in 0..(m-1))
+            console_text("A${j+1}".padEnd(lengthOfString))
+        for(i in 0..n-1)
+        {
+            console_text("\n"+"${i+1}".padEnd(lengthOfString)+"A${Bazis[i]}".padEnd(lengthOfString))
+            console_text("${C[Bazis[i]-1]}".padEnd(lengthOfString))
+            if(B[i][1]==1)
+            {
+                console_text("${B[i][0]}".padEnd(lengthOfString))
+            }
+            else
+            {
+                console_text("${B[i][0]}/${B[i][1]}".padEnd(lengthOfString))
+            }
+            for(j in 0..m-1)
+            {
+                if(A[i][j][1]==1)
+                {
+                    console_text("${A[i][j][0]}".padEnd(lengthOfString))
+                }
+                else
+                {
+                    console_text("${A[i][j][0]}/${A[i][j][1]}".padEnd(lengthOfString))
+                }
+            }
+            console_text("\n")
+        }
+        console_text("\n"+"${n+1}".padEnd(2*lengthOfString)+"\u0394j".padEnd(lengthOfString))
+        var temp_B = mutableListOf(0,0)
+        var sum = mutableListOf(0,1)
+        sum[0]=0
+        sum[1]=1
+        for(i in 0..n-1) {
+            if (Bazis[i] <= m) {
+                temp_B[0]=C[Bazis[i]-1]*B[i][0]
+                temp_B[1]=B[i][1]
+                sum=sum_drob(temp_B,sum)
+            }
+        }
+        if(sum[1]==1)
+        {
+            console_text("${sum[0]}".padEnd(lengthOfString))
+        }
+        else
+        {
+            console_text("${sum[0]}/${sum[1]}".padEnd(lengthOfString))
+        }
+        for(j in 0..m-1)
+        {
+            djey[j][0]=0
+            djey[j][1]=1
+            for(i in 0..n-1)
+            {
+                temp_B[0]=C[Bazis[i]-1]*A[i][j][0]
+                temp_B[1]=A[i][j][1]
+                djey[j]=sum_drob(temp_B,djey[j])
+            }
+            djey[j][0]-=(C[j] * djey[j][1])
+            if(djey[j][1]==1)
+            {
+                console_text("${djey[j][0]}".padEnd(lengthOfString))
+            }
+            else
+            {
+                console_text("${djey[j][0]}/${djey[j][1]}".padEnd(lengthOfString))
+            }
+        }
+        if(sum[1]==1)
+        {
+            console_text("\nFmax = ${sum[0]}")
+        }
+        else
+        {
+            console_text("\nFmax = ${sum[0]}/${sum[1]}")
+        }
+    }
+}
